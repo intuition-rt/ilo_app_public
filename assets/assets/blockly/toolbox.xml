@@ -1,0 +1,38 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <category name="Ilo • Capteurs" colour="#FFB020">
+    <block type="ilo_sensor_value"></block>
+    <block type="ilo_sensor_imu"></block>
+    <block type="ilo_sensor_battery"></block>
+    <block type="ilo_sensor_color"></block>
+    <block type="ilo_sensor_motor"></block>
+  </category>
+  <category name="Ilo • Mouvements" colour="#50E3C2">
+    <block type="ilo_move"></block>
+    <block type="ilo_rotate"></block>
+  </category>
+  <category name="Ilo • Lumière" colour="#A259FF">
+    <block type="ilo_set_led"></block>
+    <block type="ilo_set_bottom_light"></block>
+  </category>
+  <category name="Ilo • Moteurs" colour="#50E3C2">
+    <block type="ilo_motor_speed"></block>
+    <block type="ilo_motor_position"></block>
+  </category>
+  <category name="Ilo • Contrôle" colour="#4A90E2">
+    <block type="ilo_delay"></block>
+    <block type="ilo_set_tempo"></block>
+    <block type="ilo_raw"></block>
+  </category>
+  <category name="Ilo • Stop" colour="#FF5A5F">
+    <block type="ilo_stop_all"></block>
+  </category>
+  <category name="Ilo • Stream" colour="#FFB020">
+    <block type="ilo_start_trame_s"></block>
+    <block type="ilo_stop_trame_s"></block>
+  </category>
+  <sep></sep>
+  <category name="Logique" categorystyle="logic_category"></category>
+  <category name="Boucles" categorystyle="loop_category"></category>
+  <category name="Math" categorystyle="math_category"></category>
+  <category name="Texte" categorystyle="text_category"></category>
+</xml>

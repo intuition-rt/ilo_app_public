@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=yes,maximum-scale=3"/>
+  <title>Ilo Blockly</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root{ 
+      --bg: #F8F9FA; 
+      --panel: #FFFFFF; 
+      --text: #202124;
+      --text-secondary: #5F6368;
+      --border: #E0E0E0;
+      --accent: #24B4B1;
+      --accent-light: rgba(36, 180, 177, 0.1);
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    * { font-family: 'Poppins', sans-serif !important; font-weight: 600 !important; }
+    
+    html,body,#area,#div{ margin:0; padding:0; height:100%; width:100%; background:var(--bg); }
+    
+    #div{ position:absolute; }
+    
+    /* Workspace Blockly fond clair */
+    .blocklyMainBackground {
+      fill: var(--bg) !important;
+    }
+    
+    .blocklySvg {
+      background-color: var(--bg) !important;
+    }
+    
+    /* Scrollbars personnalisées (webkit) */
+    .blocklyScrollbarVertical,
+    .blocklyScrollbarHorizontal {
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
+    
+    .blocklyScrollbarVertical:hover,
+    .blocklyScrollbarHorizontal:hover {
+      opacity: 0.8;
+    }
+    
+    .blocklyScrollbarBackground {
+      fill: rgba(0, 0, 0, 0.03) !important;
+      fill-opacity: 0.3 !important;
+    }
+    
+    .blocklyScrollbarHandle {
+      fill: #9E9E9E !important;
+      fill-opacity: 0.5 !important;
+      rx: 4 !important;
+    }
+    
+    .blocklyScrollbarHandle:hover {
+      fill: #757575 !important;
+      fill-opacity: 0.7 !important;
+    }
+    
+    /* Contrôles de zoom */
+    .blocklyZoom {
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+    }
+    
+    .blocklyZoom > image {
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+    
+    .blocklyZoom > image:hover {
+      opacity: 1;
+    }
+    
+    /* Boutons de zoom personnalisés */
+    .blocklyZoom rect {
+      fill: var(--panel) !important;
+      stroke: var(--accent) !important;
+      stroke-width: 2 !important;
+      rx: 8 !important;
+    }
+    
+    .blocklyZoom rect:hover {
+      fill: var(--accent-light) !important;
+      stroke: var(--accent) !important;
+    }
+    
+    .blocklyZoom line {
+      stroke: var(--accent) !important;
+      stroke-width: 2 !important;
+    }
+    
+    /* Poubelle (trash) */
+    .blocklyTrash {
+      opacity: 0.6;
+      transition: opacity 0.2s ease;
+    }
+    
+    .blocklyTrash:hover {
+      opacity: 1;
+    }
+    
+    /* Toolbox - Light theme avec accent */
+    .blocklyToolbox{ 
+      background: linear-gradient(180deg, var(--panel), #F5F5F5); 
+      border-right: 1px solid var(--border); 
+      color: var(--text);
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Catégories de la toolbox */
+    .blocklyTreeRow {
+      padding: 6px 12px !important;
+      margin: 2px 4px !important;
+      border-radius: 8px !important;
+      transition: background-color 0.15s ease !important;
+    }
+    
+    .blocklyTreeRow:hover {
+      background-color: var(--accent-light) !important;
+    }
+    
+    .blocklyTreeSelected {
+      background-color: var(--accent-light) !important;
+    }
+    
+    .blocklyTreeLabel {
+      color: var(--text) !important;
+      font-size: 13px !important;
+    }
+    
+    /* Flyout (panneau des blocs) */
+    .blocklyFlyoutBackground {
+      fill: var(--panel) !important;
+      fill-opacity: 0.98 !important;
+    }
+    
+    /* Grille plus subtile */
+    .blocklyGridPattern line {
+      stroke: #E0E0E0 !important;
+    }
+    
+    /* Amélioration des blocs - ombres douces */
+    .blocklyDraggable {
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+      transition: filter 0.15s ease;
+    }
+    
+    .blocklyDraggable:hover {
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12));
+    }
+    
+    .blocklySelected > .blocklyPath {
+      stroke: var(--accent) !important;
+      stroke-width: 3px !important;
+    }
+    
+    /* Highlight de connexion */
+    .blocklyHighlightedConnectionPath {
+      stroke: var(--accent) !important;
+      stroke-width: 4px !important;
+    }
+    
+    /* Bulle de commentaire */
+    .blocklyCommentTextarea {
+      background: var(--panel) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+      color: var(--text) !important;
+      font-family: 'Poppins', sans-serif !important;
+      padding: 8px !important;
+    }
+    
+    /* Dropdown menus */
+    .blocklyDropDownDiv {
+      background: var(--panel) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .blocklyMenuItem {
+      color: var(--text) !important;
+      padding: 8px 16px !important;
+    }
+    
+    .blocklyMenuItem:hover {
+      background: var(--accent-light) !important;
+    }
+    
+    .blocklyMenuItemSelected {
+      background: var(--accent-light) !important;
+      color: var(--accent) !important;
+    }
+    
+    /* Tooltip */
+    .blocklyTooltipDiv {
+      background: var(--panel) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+      color: var(--text) !important;
+      font-family: 'Poppins', sans-serif !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+      padding: 8px 12px !important;
+    }
+    
+    /* Context menu */
+    .blocklyContextMenu {
+      background: var(--panel) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+      padding: 4px 0 !important;
+    }
+    
+    .blocklyContextMenu .goog-menuitem {
+      color: var(--text) !important;
+      font-family: 'Poppins', sans-serif !important;
+      padding: 8px 16px !important;
+    }
+    
+    .blocklyContextMenu .goog-menuitem:hover {
+      background: var(--accent-light) !important;
+    }
+    
+    /* Animation d'apparition des blocs */
+    @keyframes blockAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .blocklyDragging {
+      opacity: 0.8;
+    }
+    
+    /* Sur mobile, la toolbox devient un overlay qui ne réduit pas le workspace */
+    @media (max-width: 768px) {
+      .blocklyToolbox {
+        position: fixed !important;
+        z-index: 1000 !important;
+        left: 0 !important;
+        top: 0 !important;
+        height: 100% !important;
+      }
+    }
+    
+    /* FIX CLAVIER MOBILE */
+    .blocklyHtmlInput {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      pointer-events: auto !important;
+      font-size: 16px !important;
+      border: 2px solid var(--accent) !important;
+      background: var(--panel) !important;
+      color: var(--text) !important;
+      padding: 8px 12px !important;
+      border-radius: 8px !important;
+      box-shadow: var(--shadow) !important;
+      -webkit-appearance: none !important;
+      appearance: none !important;
+    }
+    
+    .blocklyHtmlInput:focus {
+      outline: none !important;
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 3px var(--accent-light), var(--shadow) !important;
+    }
+    
+    .blocklyWidgetDiv { 
+      pointer-events: auto !important; 
+      z-index: 99999 !important;
+      -webkit-user-select: auto !important;
+      user-select: auto !important;
+    }
+    
+    .blocklyWidgetDiv input {
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
+    }
+    
+    @media (max-width: 768px) {
+      .blocklyHtmlInput { 
+        min-height: 44px !important;
+        padding: 12px 16px !important;
+      }
+    }
+    
+    /* TOGGLE BUTTON TOOLBOX MOBILE - Light theme */
+    #toggleToolbox {
+      display: none;
+      position: fixed;
+      bottom: 33px;
+      left: 20px;
+      z-index: 100000;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--panel);
+      border: 2px solid var(--accent);
+      box-shadow: 0 4px 16px rgba(36, 180, 177, 0.2), 0 8px 24px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: var(--accent);
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      pointer-events: auto !important;
+      touch-action: manipulation;
+    }
+    
+    #toggleToolbox:hover {
+      background: var(--accent-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(36, 180, 177, 0.3), 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
+    
+    #toggleToolbox:active {
+      transform: scale(0.95);
+      background: var(--accent);
+      color: white;
+    }
+    
+    @media (max-width: 768px) {
+      #toggleToolbox {
+        display: flex !important;
+      }
+      
+      .blocklyToolbox {
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+      
+      .blocklyToolbox.hidden {
+        transform: translateX(-100%);
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+  </style>
+  
+  <script src="./blockly_compressed.js"></script>
+  <script>console.log('[LOADER] Blockly loaded. Exists? on window', typeof window.Blockly);window.Blockly = Blockly;</script>
+  <script src="./blocks_compressed.js"></script>
+  <script src="./javascript_compressed.js"></script>
+  <!-- FORCE RELOAD with timestamp -->
+  <script src="./python_pipeline.js"></script>
+  <script>console.log('[LOADER] Python loaded. Exists?', window.Blockly && window.Blockly.Python ? 'YES' : 'NO');</script>
+  <script src="./msg/fr.js"></script>
+  <script src="./custom_blocks.js?v=2025103113"></script>
+  <script src="./custom_generators.js?v=2025103113"></script>
+  <script src="./custom_generators_python.js?v=2025111209"></script>
+  <script src="./python_parser.js?v=2025111209"></script>
+  <script>
+    // Vérifier que Blockly.Python est chargé
+    console.log('[INIT] Checking Blockly.Python...');
+    console.log('[INIT] Blockly available:', typeof Blockly !== 'undefined');
+    console.log('[INIT] Blockly.Python available:', typeof Blockly !== 'undefined' && typeof Blockly.Python !== 'undefined');
+    if (typeof Blockly !== 'undefined' && Blockly.Python) {
+      console.log('[INIT] ✅ Blockly.Python loaded successfully');
+    } else {
+      console.error('[INIT] ❌ Blockly.Python NOT loaded!');
+    }
+  </script>
+</head>
+<body>
+  <div id="area"></div>
+  <div id="div"></div>
+  <button id="toggleToolbox" title="Afficher/Cacher les blocs">📦</button>
+
+  <script>
+    // Blocs custom
+    Blockly.defineBlocksWithJsonArray([
+      { "type": "ilo_on_start", "message0": "🚀 Au démarrage", "nextStatement": null, "style": "procedure_blocks", "hat": "cap" },
+      { "type": "ilo_forever", "message0": "🔄 Répéter", "message1": "%1", "args1": [{ "type": "input_statement", "name": "DO" }], "style": "loop_blocks", "hat": "cap" }
+    ]);
+
+    // Charger la toolbox depuis toolbox.xml
+    const toolboxXml = `
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <category name="⚙️ Programme" colour="#FF9500">
+    <label text="Structure du programme"></label>
+    <block type="ilo_setup"></block>
+    <block type="ilo_loop"></block>
+  </category>
+  <sep></sep>
+  <category name="Ilo • Capteurs" colour="#FFB020">
+    <block type="ilo_sensor_value"></block>
+    <block type="ilo_sensor_imu"></block>
+    <block type="ilo_sensor_battery"></block>
+    <block type="ilo_sensor_color"></block>
+    <block type="ilo_sensor_motor"></block>
+  </category>
+  <category name="Ilo • Mouvements" colour="#50E3C2">
+    <block type="ilo_move"></block>
+    <block type="ilo_rotate"></block>
+  </category>
+  <category name="Ilo • Lumière" colour="#A259FF">
+    <block type="ilo_set_led"></block>
+    <block type="ilo_set_bottom_light"></block>
+  </category>
+  <category name="Ilo • Moteurs" colour="#50E3C2">
+    <block type="ilo_motor_speed"></block>
+    <block type="ilo_motor_position"></block>
+  </category>
+  <category name="Ilo • Contrôle" colour="#4A90E2">
+    <block type="ilo_delay"></block>
+    <block type="ilo_display"></block>
+    <block type="ilo_set_tempo"></block>
+    <block type="ilo_raw"></block>
+  </category>
+  <category name="Ilo • Stop" colour="#FF5A5F">
+    <block type="ilo_stop_all"></block>
+  </category>
+  <category name="Ilo • Stream" colour="#FFB020">
+    <block type="ilo_start_trame_s"></block>
+    <block type="ilo_stop_trame_s"></block>
+  </category>
+  <sep></sep>
+  <category name="Logique" categorystyle="logic_category">
+    <block type="controls_if"></block>
+    <block type="logic_compare"></block>
+    <block type="logic_operation"></block>
+    <block type="logic_boolean"></block>
+  </category>
+  <category name="Boucles" categorystyle="loop_category">
+    <block type="controls_repeat_ext"></block>
+    <block type="controls_whileUntil"></block>
+  </category>
+  <category name="Math" categorystyle="math_category">
+    <block type="math_number"></block>
+    <block type="math_arithmetic"></block>
+  </category>
+  <category name="Texte" categorystyle="text_category">
+    <block type="text"></block>
+  </category>
+</xml>
+    `;
+
+    window.workspace = Blockly.inject(div, {
+      theme: Blockly.Themes.Classic,
+      toolbox: toolboxXml,
+      zoom: {controls:true, wheel:true},
+      grid: {spacing:20, length:3, colour:'#E0E0E0', snap:true},
+      trashcan: true,
+      renderer: 'zelos'
+    });
+
+    // Enregistrer les générateurs Python custom APRÈS l'injection du workspace
+    if (window.registerIloPythonGenerators) {
+      window.registerIloPythonGenerators();
+    }
+
+    // FIX MOBILE KEYBOARD - Force l'utilisation d'inputs HTML
+    console.log('[FIX] Mobile keyboard fix');
+    
+    // CRITIQUE: Force FieldNumber à TOUJOURS utiliser un widget editor (pas inline)
+    if (Blockly.FieldNumber) {
+      // Désactive complètement l'inline editor pour forcer le widget
+      Blockly.FieldNumber.prototype.SERIALIZABLE = true;
+      
+      const origNum = Blockly.FieldNumber.prototype.showEditor_;
+      Blockly.FieldNumber.prototype.showEditor_ = function(e, quiet) {
+        console.log('[MOBILE] Number field clicked');
+        
+        // Force quietInput à FALSE pour créer un vrai widget HTML
+        const r = origNum.call(this, e, false);
+        
+        // Attendre que le widget soit créé (max 10 tentatives)
+        let attempts = 0;
+        const checkInput = () => {
+          const inp = this.htmlInput_;
+          if (inp) {
+            console.log('[MOBILE] Input created, forcing keyboard');
+            
+            // Configuration mobile agressive
+            inp.setAttribute('inputmode', 'decimal');
+            inp.setAttribute('pattern', '[0-9]*');
+            inp.setAttribute('type', 'number');
+            inp.setAttribute('data-is-text-input', 'true');
+            inp.style.fontSize = '16px';
+            inp.style.minHeight = '44px';
+            inp.readOnly = false;
+            inp.disabled = false;
+            
+            // Force focus multiple fois (iOS a besoin de ça)
+            inp.focus();
+            inp.select();
+            setTimeout(() => { inp.focus(); inp.select(); }, 50);
+            setTimeout(() => { inp.focus(); inp.select(); }, 150);
+            setTimeout(() => { inp.focus(); inp.select(); }, 300);
+            
+            console.log('[OK] Keyboard activated');
+          } else if (attempts < 10) {
+            attempts++;
+            setTimeout(checkInput, 20);
+          }
+        };
+        
+        setTimeout(checkInput, 10);
+        return r;
+      };
+      
+      console.log('[OK] FieldNumber patched');
+    }
+    
+    if (Blockly.FieldTextInput) {
+      const orig = Blockly.FieldTextInput.prototype.showEditor_;
+      Blockly.FieldTextInput.prototype.showEditor_ = function(e, quiet) {
+        console.log('[MOBILE] Text input');
+        const r = orig.call(this, e, false);
+        
+        setTimeout(() => {
+          const inp = this.htmlInput_;
+          if (inp) {
+            console.log('[MOBILE] Text keyboard activated');
+            inp.setAttribute('inputmode', 'text');
+            inp.setAttribute('data-is-text-input', 'true');
+            inp.style.fontSize = '16px';
+            inp.readOnly = false;
+            inp.focus();
+            inp.select();
+            setTimeout(() => { inp.focus(); inp.select(); }, 100);
+          }
+        }, 10);
+        return r;
+      };
+      
+      console.log('[OK] FieldTextInput patched');
+    }
+    
+    document.addEventListener('touchstart', e => {
+      if (e.target && e.target.classList && e.target.classList.contains('blocklyHtmlInput')) {
+        console.log('👆 [TOUCH] Input touched');
+        e.stopPropagation();
+        setTimeout(() => { e.target.focus(); e.target.select(); }, 10);
+      }
+    }, { capture: true, passive: false });
+    
+    // Observer pour capturer TOUS les inputs créés dynamiquement
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === 1) {
+            let inputs = [];
+            
+            // Si c'est un input
+            if (node.tagName === 'INPUT' || (node.classList && node.classList.contains('blocklyHtmlInput'))) {
+              inputs.push(node);
+            }
+
+            // Chercher dans les enfants
+            if (node.querySelectorAll) {
+              inputs.push(...node.querySelectorAll('input.blocklyHtmlInput, input[class*="blockly"]'));
+            }
+
+            inputs.forEach(inp => {
+              console.log('[DETECT] [OBSERVER] Input detected:', inp.type, inp.className);
+
+              // Force config mobile
+              if (inp.type === 'number' || inp.className.includes('Number')) {
+                inp.setAttribute('inputmode', 'decimal');
+                inp.setAttribute('pattern', '[0-9]*');
+              } else {
+                inp.setAttribute('inputmode', 'text');
+              }
+              
+              inp.setAttribute('data-is-text-input', 'true');
+              inp.style.fontSize = '16px';
+              inp.style.minHeight = '44px';
+              inp.readOnly = false;
+              inp.disabled = false;
+              
+              // Event listener
+              inp.addEventListener('touchstart', e => {
+                console.log('👆 [LISTENER] Touch on input');
+                e.stopPropagation();
+                setTimeout(() => {
+                  inp.focus();
+                  inp.select();
+                }, 10);
+              }, { passive: false, once: false });
+              
+              console.log('[OK] [OBSERVER] Input configured');
+            });
+          }
+        });
+      });
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+    console.log('[OK] MutationObserver active');
+
+    function onresize(){
+      const r = area.getBoundingClientRect();
+      div.style.left=r.left+'px'; div.style.top=r.top+'px';
+      div.style.width=r.width+'px'; div.style.height=r.height+'px';
+      Blockly.svgResize(workspace);
+    }
+    window.addEventListener('resize', onresize);
+    onresize();
+
+    function post(p){ 
+      console.log('[POST] 📤 Attempting to post message:', p);
+      try{ 
+        const jsonMsg = JSON.stringify(p);
+        
+        // Vérifier si flutter_inappwebview est disponible (Native/Desktop)
+        if(window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+          console.log('[POST] ✅ flutter_inappwebview found, calling handler...');
+          console.log('[POST] JSON message:', jsonMsg);
+          window.flutter_inappwebview.callHandler('IloBridge', jsonMsg);
+          console.log('[POST] ✅ Handler called successfully');
+        } else if(window.IloBridge) {
+          // Fallback pour compatibilité (Native)
+          console.log('[POST] ✅ IloBridge found (fallback), sending message...');
+          console.log('[POST] JSON message:', jsonMsg);
+          window.IloBridge.postMessage(jsonMsg);
+          console.log('[POST] ✅ Message sent successfully');
+        } else if(window.parent !== window) {
+          // Mode Web : postMessage vers le parent
+          console.log('[POST] ✅ Web mode detected, using postMessage to parent...');
+          console.log('[POST] 📍 Current origin:', window.location.origin);
+          console.log('[POST] 📍 Parent origin (injected):', window.__PARENT_ORIGIN__);
+          
+          // Utiliser l'origine injectée (car dans un Data URL, window.location.origin est 'null')
+          const targetOrigin = window.__PARENT_ORIGIN__ || window.location.origin || '*';
+          
+          window.parent.postMessage({
+            handler: 'IloBridge',
+            data: jsonMsg
+          }, targetOrigin);
+          console.log('[POST] ✅ PostMessage sent to parent with origin:', targetOrigin);
+        } else {
+          console.error('[POST] ❌ No communication method available!');
+          console.log('[POST] Available objects:', Object.keys(window).filter(k => k.includes('flutter') || k.includes('Ilo')));
+        }
+      }catch(e){
+        console.error('[POST] ❌ Error posting message:', e);
+      } 
+    }
+
+    // Utilise les générateurs custom qui supportent les FieldNumber
+    function step(b){ 
+      if(!b) return null;
+      
+      // Utiliser les générateurs de custom_generators.js
+      if(window.IloGenerators && window.IloGenerators.blockToStep) {
+        return window.IloGenerators.blockToStep(Blockly, b);
+      }
+      
+      // Fallback avec getFieldValue pour les nouveaux blocs
+      switch(b.type){ 
+        case 'ilo_move': 
+          return {
+            op:'move',
+            dir: b.getFieldValue('DIR')||'front',
+            dist: Number(b.getFieldValue('DIST')) || 100,
+            acc: Number(b.getFieldValue('ACC')) || 200
+          };
+        case 'ilo_rotate': 
+          return {
+            op:'rotate',
+            angle: Number(b.getFieldValue('ANGLE')) || 90
+          };
+        case 'ilo_set_led': 
+          return {
+            op:'set_led',
+            r: Number(b.getFieldValue('R')) || 255,
+            g: Number(b.getFieldValue('G')) || 0,
+            b: Number(b.getFieldValue('B')) || 0
+          };
+        case 'ilo_delay': 
+          return {
+            op:'delay',
+            ms: Number(b.getFieldValue('MS')) || 300
+          };
+        case 'ilo_start_trame_s':
+          const paramsStr = b.getFieldValue('PARAMS') || 'battery,angle';
+          return {
+            op:'start_trame_s',
+            hz: Number(b.getFieldValue('HZ')) || 10,
+            params: paramsStr.split(',').map(s=>s.trim()).filter(Boolean)
+          };
+        case 'ilo_stop_trame_s':
+          return { op:'stop_trame_s' };
+        case 'ilo_raw':
+          return {
+            op:'raw',
+            command: b.getFieldValue('CMD') || '<40>'
+          };
+        case 'controls_if': 
+          const c=b.getInputTargetBlock('IF0'); 
+          const t=b.getInputTargetBlock('DO0'); 
+          const e=b.getInputTargetBlock('ELSE'); 
+          return {op:'if',cond:expr(c),then:chain(t),else:chain(e)};
+      } 
+      return null; 
+    }
+
+    function expr(b){ if(!b) return {type:'bool',value:false}; if(b.type==='logic_compare'){ const op=b.getFieldValue('OP')||'GT'; const l=numExpr(b.getInputTargetBlock('A')); const r=numExpr(b.getInputTargetBlock('B')); return {type:'cmp',op,left:l,right:r}; } return {type:'bool',value:false}; }
+
+    function numExpr(b){ 
+      if(!b) return {type:'num',value:0}; 
+      if(b.type==='math_number') return {type:'num',value:Number(b.getFieldValue('NUM')||0)}; 
+      if(b.type==='ilo_sensor' || b.type==='ilo_sensor_value') return {type:'sensor',which:b.getFieldValue('WHICH')||'front'}; 
+      return {type:'num',value:0}; 
+    }
+
+    function chain(b){ const s=[]; let c=b; while(c){ const st=step(c); if(st) s.push(st); c=c.getNextBlock(); } return s; }
+
+    window.Ilo = {
+      setContext(c){ window.__ctx=c||{}; },
+      exportProgram(){ 
+        console.log('[EXPORT] 🎬 exportProgram called');
+        try{ 
+          // Utiliser le générateur custom qui gère SETUP et LOOP
+          const program = window.IloGenerators.workspaceToProgramJSON(Blockly, workspace);
+          
+          console.log('[EXPORT] 📦 Program generated:', JSON.stringify(program));
+          
+          const payload = {type:'PROGRAM', blocks: program};
+          console.log('[EXPORT] 📦 Sending payload:', JSON.stringify(payload));
+          
+          post(payload);
+          console.log('[EXPORT] ✅ Payload sent successfully');
+        }catch(e){
+          console.error('[EXPORT] ❌ Error:', e);
+        } 
+      },
+      exportWorkspaceXml(){ 
+        try{ 
+          post({type:'WORKSPACE_XML',xml:Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace))}); 
+        } catch(e) {
+          console.error('[EXPORT_XML] Error:', e);
+        } 
+      },
+      getWorkspaceXml(){ 
+        try{ 
+          console.log('[GET_XML] Getting workspace XML...');
+          if (!workspace) {
+            console.error('[GET_XML] Workspace is null!');
+            return null;
+          }
+          const dom = Blockly.Xml.workspaceToDom(workspace);
+          console.log('[GET_XML] DOM created:', dom);
+          const xml = Blockly.Xml.domToText(dom);
+          console.log('[GET_XML] XML string length:', xml ? xml.length : 0);
+          return xml;
+        } catch(e) { 
+          console.error('[GET_XML] Error getting workspace XML:', e);
+          return null; 
+        } 
+      },
+      importWorkspaceXml(x){ 
+        try{ 
+          console.log('[IMPORT_XML] Importing workspace from XML...');
+          console.log('[IMPORT_XML] XML length:', x ? x.length : 0);
+          
+          workspace.clear();
+          
+          // Utiliser la nouvelle API Blockly
+          const parser = new DOMParser();
+          const dom = parser.parseFromString(x, 'text/xml');
+          
+          console.log('[IMPORT_XML] DOM parsed:', dom);
+          Blockly.Xml.domToWorkspace(dom.documentElement, workspace);
+          console.log('[IMPORT_XML] ✅ Workspace imported successfully');
+        } catch(e) {
+          console.error('[IMPORT_XML] Error:', e);
+        } 
+      },
+      clear(){ 
+        try{ 
+          workspace.clear(); 
+        } catch(e) {
+          console.error('[CLEAR] Error:', e);
+        } 
+      },
+      
+      // ============ FONCTIONS PYTHON ============
+      getPythonCode(){ 
+        try {
+          // Tentative de récupération si Blockly.Python est manquant mais window.python existe
+          if (typeof Blockly !== 'undefined' && !Blockly.Python && window.python && window.python.pythonGenerator) {
+            console.warn('[PYTHON] ⚠️ Restoring Blockly.Python from window.python');
+            Blockly.Python = window.python.pythonGenerator;
+          }
+
+          if (!window.Blockly || !window.Blockly.Python) {
+            console.error('[PYTHON] ❌ Blockly.Python not loaded!');
+            try {
+              if (window.Blockly) {
+                console.log('[PYTHON] Keys in Blockly:', Object.keys(window.Blockly).filter(k => k.indexOf('Python') !== -1 || k.indexOf('python') !== -1));
+              }
+              console.log('[PYTHON] window.python exists:', !!window.python);
+            } catch(e) {}
+            return '# Erreur: Générateur Python non chargé\n';
+          }
+          
+          // Initialiser le générateur Python
+          Blockly.Python.init(workspace);
+          
+          // Trouver les blocs setup et loop dans le workspace
+          const allBlocks = workspace.getAllBlocks(false);
+          const setupBlock = allBlocks.find(b => b.type === 'ilo_setup');
+          const loopBlock = allBlocks.find(b => b.type === 'ilo_loop');
+          
+          let setupCode = '';
+          let loopCode = '';
+          
+          // Générer le code uniquement pour le bloc setup et ses enfants
+          if (setupBlock) {
+            console.log('[PYTHON] Generating code for SETUP block');
+            setupCode = Blockly.Python.blockToCode(setupBlock);
+            if (Array.isArray(setupCode)) setupCode = setupCode[0];
+          }
+          
+          // Générer le code uniquement pour le bloc loop et ses enfants
+          if (loopBlock) {
+            console.log('[PYTHON] Generating code for LOOP block');
+            loopCode = Blockly.Python.blockToCode(loopBlock);
+            if (Array.isArray(loopCode)) loopCode = loopCode[0];
+          }
+          
+          // Finaliser le générateur
+          Blockly.Python.finish('');
+          
+          // Assembler le code final
+          let code = '';
+          if (setupCode && setupCode.trim()) {
+            code += setupCode.trim() + '\n\n';
+          }
+          if (loopCode && loopCode.trim()) {
+            code += loopCode.trim();
+          }
+          
+          // Ajouter l'import ilo en haut du code
+          const finalCode = '# Robot Ilo - Code Python\nimport ilo\n\n' + code;
+          
+          console.log('[PYTHON] Generated code from setup/loop only');
+          return finalCode;
+        } catch(e) {
+          console.error('[PYTHON] Error generating code:', e);
+          console.error('[PYTHON] Error stack:', e.stack);
+          return '# Erreur de génération: ' + e.message + '\n';
+        }
+      },
+      
+      importFromPython(pythonCode){ 
+        try {
+          console.log('[PYTHON] Importing from Python code...');
+          if (window.IloPythonParser && window.IloPythonParser.importFromPython) {
+            window.IloPythonParser.importFromPython(workspace, pythonCode);
+            console.log('[PYTHON] ✅ Import successful');
+          } else {
+            console.error('[PYTHON] ❌ Parser not loaded');
+          }
+        } catch(e) {
+          console.error('[PYTHON] Error importing:', e);
+        }
+      }
+    };
+
+    // ============ EVENT LISTENER POUR SYNCHRONISATION TEMPS RÉEL ============
+    let pythonSyncTimeout = null;
+    workspace.addChangeListener(function(event) {
+      // Détecter les changements pertinents pour la synchronisation Python
+      if (event.type === Blockly.Events.BLOCK_MOVE ||
+          event.type === Blockly.Events.BLOCK_CHANGE ||
+          event.type === Blockly.Events.BLOCK_CREATE ||
+          event.type === Blockly.Events.BLOCK_DELETE ||
+          event.type === Blockly.Events.FINISHED_LOADING) {
+        
+        // Debounce pour éviter trop d'appels
+        if (pythonSyncTimeout) clearTimeout(pythonSyncTimeout);
+        
+        pythonSyncTimeout = setTimeout(() => {
+          try {
+            const pythonCode = window.Ilo.getPythonCode();
+            
+            // Envoyer le code Python mis à jour à Flutter
+            post({
+              type: 'PYTHON_CODE_UPDATED',
+              code: pythonCode
+            });
+            
+            console.log('[SYNC] Python code updated and sent to Flutter');
+          } catch(e) {
+            console.error('[SYNC] Error during Python sync:', e);
+          }
+        }, 300); // Attendre 300ms après le dernier changement
+      }
+    });
+
+    console.log('[OK] Python sync listener registered');
+
+    // ============ DÉTECTION DE FOCUS SUR BLOCKLY ============
+    // Détecter quand l'utilisateur interagit avec Blockly
+    document.addEventListener('mousedown', function(e) {
+      // Vérifier si le clic est dans la zone Blockly
+      const blocklyDiv = document.getElementById('blocklyDiv');
+      if (blocklyDiv && blocklyDiv.contains(e.target)) {
+        post({
+          type: 'BLOCKLY_FOCUS'
+        });
+        console.log('[FOCUS] Blockly editor is now active');
+      }
+    });
+
+    document.addEventListener('touchstart', function(e) {
+      const blocklyDiv = document.getElementById('blocklyDiv');
+      if (blocklyDiv && blocklyDiv.contains(e.target)) {
+        post({
+          type: 'BLOCKLY_FOCUS'
+        });
+        console.log('[FOCUS] Blockly editor is now active');
+      }
+    });
+
+    // ============ WORKSPACE PAR DÉFAUT AVEC SETUP ET LOOP ============
+    // Charger le workspace par défaut avec les blocs SETUP et LOOP si le workspace est vide
+    if (workspace.getAllBlocks(false).length === 0) {
+      const defaultWorkspaceXml = `
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="ilo_setup" x="50" y="50">
+  </block>
+  <block type="ilo_loop" x="50" y="150">
+  </block>
+</xml>`;
+      try {
+        const xml = Blockly.utils.xml.textToDom(defaultWorkspaceXml);
+        Blockly.Xml.domToWorkspace(xml, workspace);
+        console.log('[INIT] Default workspace loaded with SETUP and LOOP blocks');
+      } catch (e) {
+        console.error('[INIT] Error loading default workspace:', e);
+      }
+    }
+
+    post({type:'READY'});
+    console.log('[OK] Ready');
+    
+    // ============ TOGGLE TOOLBOX MOBILE ============
+    (function() {
+      const toggleBtn = document.getElementById('toggleToolbox');
+      let toolboxVisible = true;
+      
+      if (!toggleBtn) return;
+      
+      // Attendre que la toolbox soit créée par Blockly
+      function initToggle() {
+        const toolbox = document.querySelector('.blocklyToolbox');
+        
+        if (!toolbox) {
+          setTimeout(initToggle, 100);
+          return;
+        }
+        
+        // Ajouter la transition CSS
+        toolbox.style.transition = 'left 0.3s ease, opacity 0.3s ease';
+        
+        // Fonction pour cacher la toolbox
+        function hideToolbox() {
+          if (!toolboxVisible) return;
+          
+          // CRITIQUE: Désactiver complètement la toolbox dans Blockly
+          if (workspace.getToolbox()) {
+            workspace.getToolbox().setVisible(false);
+          }
+          
+          // Cacher visuellement
+          const toolboxWidth = toolbox.offsetWidth;
+          toolbox.style.left = `-${toolboxWidth}px`;
+          toolbox.style.opacity = '0';
+          toolbox.style.pointerEvents = 'none';
+          toolboxVisible = false;
+          toggleBtn.title = 'Afficher les blocs';
+        }
+        
+        // Fonction pour afficher la toolbox
+        function showToolbox() {
+          if (toolboxVisible) return;
+          
+          // CRITIQUE: Réactiver la toolbox dans Blockly
+          if (workspace.getToolbox()) {
+            workspace.getToolbox().setVisible(true);
+          }
+          
+          // Réafficher visuellement
+          toolbox.style.left = '0px';
+          toolbox.style.opacity = '1';
+          toolbox.style.pointerEvents = 'auto';
+          toolboxVisible = true;
+          toggleBtn.title = 'Cacher les blocs';
+        }
+        
+        // Event listener sur le bouton
+        toggleBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (toolboxVisible) {
+            hideToolbox();
+          } else {
+            showToolbox();
+          }
+        });
+        
+        // Sur mobile, cacher la toolbox quand un bloc est sélectionné/déplacé
+        if (window.innerWidth <= 768) {
+          // Écouter les événements de sélection de blocs
+          workspace.addChangeListener(function(event) {
+            // Détecter quand un bloc commence à être déplacé
+            if (event.type === Blockly.Events.BLOCK_DRAG && !event.isStart) {
+              // Le bloc a été déposé, on peut réafficher la toolbox si nécessaire
+              return;
+            }
+            
+            if (event.type === Blockly.Events.BLOCK_DRAG && event.isStart) {
+              // Un bloc commence à être déplacé, cacher la toolbox
+              hideToolbox();
+            }
+            
+            // Aussi cacher quand un bloc est créé depuis la toolbox
+            if (event.type === Blockly.Events.BLOCK_CREATE) {
+              hideToolbox();
+            }
+          });
+          
+        }
+      }
+      
+      setTimeout(initToggle, 100);
+    })();
+    
+    // Écouter les messages postMessage (pour mode Web) - au niveau global
+    window.addEventListener('message', function(event) {
+      console.log('[Web] 📨 Message received from:', event.origin);
+      // console.log('[Web] 📦 Message data:', event.data); // Trop verbeux
+      
+      // Vérifier que le message vient de l'origine attendue (sécurité)
+      const expectedOrigin = window.__PARENT_ORIGIN__ || window.location.origin;
+      
+      // Autoriser "null" (fichiers locaux) et l'origine attendue
+      const isValidOrigin = event.origin === expectedOrigin || 
+                           event.origin === "null" || 
+                           expectedOrigin === "null" ||
+                           !expectedOrigin;
+
+      if (!isValidOrigin) {
+        console.warn('[Web] ⚠️ Message rejected - wrong origin:', event.origin, '!==', expectedOrigin);
+        return;
+      }
+      
+      if (event.data && event.data.type === 'evaluate' && event.data.code) {
+        try {
+          console.log('[Web] 🔄 Evaluating code:', event.data.code.substring(0, 100));
+          const result = eval(event.data.code);
+          console.log('[Web] ✅ Code evaluated successfully, result:', result);
+          
+          // Renvoyer le résultat au parent avec l'ID de la requête
+          const targetOrigin = window.__PARENT_ORIGIN__ || window.location.origin || '*';
+          window.parent.postMessage({
+            type: 'evaluate_result',
+            requestId: event.data.requestId,
+            result: result,
+            success: true
+          }, targetOrigin);
+          console.log('[Web] 📤 Result sent back to parent');
+        } catch (e) {
+          console.error('[Web] ❌ Error evaluating code:', e);
+          
+          // Envoyer l'erreur au parent
+          const targetOrigin = window.__PARENT_ORIGIN__ || window.location.origin || '*';
+          window.parent.postMessage({
+            type: 'evaluate_result',
+            requestId: event.data.requestId,
+            error: e.toString(),
+            success: false
+          }, targetOrigin);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

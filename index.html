@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="ilorobot">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>ilorobot</title>
+  <link rel="manifest" href="manifest.json">
+
+  <script>
+    // Le service worker version est injecté par flutter build
+    const serviceWorkerVersion = "2421304436";
+  </script>
+  <script src="flutter.js" defer></script>
+  <script src="serial.js" defer></script>
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
+  <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta name="google-signin-client_id" content="27250456978-ccfrprrj3bgiiflqfeqkkc0bbak9fjve.apps.googleusercontent.com">
+</head>
+<body>
+  <script type="module">
+  import { initEspFlasher } from './esp_flasher.js';
+  window.espReady = (async () => {
+    try {
+      await initEspFlasher();
+      console.log('[ESP] flasher ready');
+    } catch (e) {
+      console.error('[ESP] init error:', e);
+      throw e;
+    }
+  })();
+</script>
+
+  <!-- Capytale Integration -->
+  <script>
+    // Définition immédiate des fonctions de base pour Capytale
+    // Ces fonctions doivent être disponibles avant que Flutter démarre
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isCapytaleParam = urlParams.has('capytale');
+      const isCapytalePath = window.location.pathname.includes('/capytale');
+      const isCapytale = isCapytaleParam || isCapytalePath;
+      
+      // État global de Capytale (pré-initialisation)
+      window.capytaleState = window.capytaleState || {
+        initialized: false,
+        mode: null,
+        activityContent: null,
+        assignmentContent: null,
+        socket: null,
+        hasUnsavedChanges: false,
+        flutterCallbacks: {}
+      };
+      
+      // Fonction de détection du mode Capytale (disponible immédiatement)
+      window.isCapytaleMode = function() {
+        return isCapytale;
+      };
+      
+      // Fonction de vérification de l'initialisation
+      window.isCapytaleInitialized = function() {
+        return window.capytaleState.initialized;
+      };
+      
+      // Fonctions placeholder (seront remplacées par capytale.js)
+      window.getCapytaleMode = window.getCapytaleMode || function() {
+        return window.capytaleState.mode;
+      };
+      
+      window.getCapytaleActivityContent = window.getCapytaleActivityContent || function() {
+        return window.capytaleState.activityContent 
+          ? JSON.stringify(window.capytaleState.activityContent) 
+          : null;
+      };
+      
+      window.getCapytaleAssignmentContent = window.getCapytaleAssignmentContent || function() {
+        if (window.capytaleState.assignmentContent === undefined) return undefined;
+        return window.capytaleState.assignmentContent 
+          ? JSON.stringify(window.capytaleState.assignmentContent) 
+          : null;
+      };
+      
+      console.log('[Capytale] Fonctions de base initialisées, isCapytale:', isCapytale);
+    })();
+  </script>
+  <script type="module">
+    // Chargement du module Capytale si nécessaire
+    if (window.isCapytaleMode()) {
+      console.log('[Capytale] Mode Capytale détecté, chargement de l\'intégration...');
+      import('./capytale.js').then(() => {
+        console.log('[Capytale] Module capytale.js chargé');
+      }).catch(err => {
+        console.error('[Capytale] Erreur chargement capytale.js:', err);
+      });
+    }
+  </script>
+
+  <!-- Démarrage de votre app Flutter -->
+  <script>
+    window.addEventListener('load', () => {
+      _flutter.loader
+        .loadEntrypoint({ serviceWorker:{ serviceWorkerVersion } })
+        .then(e => e.initializeEngine())
+        .then(app => app.runApp());
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python Editor</title>
+  <style>
+    :root {
+      --bg: #F8F9FA;
+      --panel: #FFFFFF;
+      --text: #202124;
+      --text-secondary: #5F6368;
+      --border: #E0E0E0;
+      --accent: #24B4B1;
+      --accent-light: rgba(36, 180, 177, 0.1);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    
+    #container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    #editor {
+      width: 100%;
+      flex: 1;
+      border: none;
+    }
+    
+    #status-bar {
+      position: relative;
+      height: 28px;
+      background: var(--panel);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 12px;
+      font-weight: 500;
+      border-top: 1px solid var(--border);
+      gap: 8px;
+    }
+    
+    #status-bar .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--accent-light);
+      border-radius: 12px;
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    
+    #status-bar .status-item.neutral {
+      background: rgba(95, 99, 104, 0.1);
+      color: var(--text-secondary);
+    }
+    
+    #status-bar .status-icon {
+      font-size: 12px;
+    }
+    
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-secondary);
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="container">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <span>Chargement de l'éditeur Python...</span>
+    </div>
+    <div id="editor"></div>
+    <div id="status-bar">
+      <span class="status-item"><span class="status-icon">🐍</span>Python</span>
+      <span class="status-item neutral" id="line-col">Ln 1, Col 1</span>
+      <span class="status-item" id="sync-status">✓ Synchronisé</span>
+    </div>
+  </div>
+
+  <!-- Monaco Editor CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  
+  <script>
+    let editor = null;
+    let isUpdatingFromExternal = false;
+    let changeTimeout = null;
+
+    // Attendre que require soit disponible
+    function initMonaco() {
+      if (typeof require === 'undefined') {
+        console.error('[Python Editor] ❌ RequireJS (require) is not loaded!');
+        console.log('[Python Editor] Retrying in 200ms...');
+        setTimeout(initMonaco, 200);
+        return;
+      }
+      
+      console.log('[Python Editor] ✅ RequireJS is loaded, initializing Monaco...');
+      
+      console.log('[Python Editor] ✅ RequireJS loaded, configuring Monaco...');
+      
+      // Configuration de Monaco
+      require.config({ 
+        paths: { 
+          vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' 
+        } 
+      });
+
+    require(['vs/editor/editor.main'], function() {
+      console.log('[Python Editor] Monaco loaded successfully');
+      
+      // Retirer le message de chargement
+      document.querySelector('.loading').style.display = 'none';
+      
+      // Enregistrer l'autocomplétion pour l'API ilo
+      monaco.languages.registerCompletionItemProvider('python', {
+        provideCompletionItems: function(model, position) {
+          const suggestions = [
+            // Mouvements
+            {
+              label: 'ilo.move',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: "ilo.move('${1|front,back,left,right|}', ${2:100}, ${3:200})",
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Déplace le robot: direction (front/back/left/right), distance (cm), accélération'
+            },
+            {
+              label: 'ilo.rotate',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'ilo.rotate(${1:90})',
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Rotation du robot en degrés'
+            },
+            // Lumières
+            {
+              label: 'ilo.set_led',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'ilo.set_led(${1:255}, ${2:0}, ${3:0})',
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Définir la couleur LED (R, G, B)'
+            },
+            {
+              label: 'ilo.set_bottom_light',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'ilo.set_bottom_light(${1:128})',
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Intensité LED inférieure (0-255)'
+            },
+            // Moteurs
+            {
+              label: 'ilo.motor_speed',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'ilo.motor_speed(${1:1}, ${2:0})',
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Contrôle vitesse moteur (ID 1-8, vitesse -7000 à 7000)'
+            },
+            {
+              label: 'ilo.motor_position',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'ilo.motor_position(${1:1}, ${2:2048})',
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Position moteur (ID 1-8, position 0-4096)'
+            },
+            // Contrôle
+            {
+              label: 'ilo.delay',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'ilo.delay(${1:300})',
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Pause en millisecondes'
+            },
+            {
+              label: 'ilo.stop_all',
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: 'ilo.stop_all()',
+              documentation: 'Arrêt complet du robot'
+            },
+            // Capteurs (propriétés)
+            {
+              label: "ilo.sensor['front']",
+              kind: monaco.languages.CompletionItemKind.Property,
+              insertText: "ilo.sensor['${1|front,back,left,right|}']",
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Capteur de distance (0-400)'
+            },
+            {
+              label: "ilo.imu['roll']",
+              kind: monaco.languages.CompletionItemKind.Property,
+              insertText: "ilo.imu['${1|roll,pitch,yaw|}']",
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: 'Capteur IMU en degrés'
+            },
+            {
+              label: 'ilo.battery_level',
+              kind: monaco.languages.CompletionItemKind.Property,
+              insertText: 'ilo.battery_level',
+              documentation: 'Niveau de batterie (0-100%)'
+            },
+            {
+                label: 'print',
+                kind: monaco.languages.CompletionItemKind.Function,
+                insertText: 'print(${1:message})',
+                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                documentation: 'Affiche un message dans la console'
+            }
+          ];
+          return { suggestions: suggestions };
+        }
+      });
+
+      // Créer l'éditeur Monaco avec thème Light
+      editor = monaco.editor.create(document.getElementById('editor'), {
+        value: '# Robot Ilo - Code Python\nimport ilo\n\n# Initialisation\n\nwhile True:\n    pass\n',
+        language: 'python',
+        theme: 'vs',
+        automaticLayout: true,
+        fontSize: 14,
+        fontFamily: "'Fira Code', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace",
+        fontLigatures: true,
+        lineNumbers: 'on',
+        roundedSelection: true,
+        scrollBeyondLastLine: false,
+        cursorBlinking: 'smooth',
+        cursorSmoothCaretAnimation: 'on',
+        smoothScrolling: true,
+        padding: { top: 12, bottom: 12 },
+        minimap: {
+          enabled: true,
+          maxColumn: 80,
+          renderCharacters: false,
+          showSlider: 'mouseover'
+        },
+        scrollbar: {
+          vertical: 'visible',
+          horizontal: 'visible',
+          verticalScrollbarSize: 10,
+          horizontalScrollbarSize: 10,
+          useShadows: false
+        },
+        suggest: {
+          showKeywords: true,
+          showSnippets: true,
+          snippetsPreventQuickSuggestions: false
+        },
+        quickSuggestions: {
+          other: true,
+          comments: false,
+          strings: false
+        },
+        suggestOnTriggerCharacters: true,
+        acceptSuggestionOnCommitCharacter: true,
+        acceptSuggestionOnEnter: 'on',
+        wordBasedSuggestions: 'currentDocument',
+        wordWrap: 'off',
+        wrappingIndent: 'indent',
+        tabSize: 4,
+        insertSpaces: true,
+        renderLineHighlight: 'all',
+        renderWhitespace: 'selection',
+        bracketPairColorization: { enabled: true }
+      });
+
+      console.log('[Python Editor] Editor created');
+
+      // Mettre à jour la position du curseur dans la barre de statut
+      editor.onDidChangeCursorPosition((e) => {
+        const position = editor.getPosition();
+        document.getElementById('line-col').textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
+      });
+
+      // Détecter le focus sur l'éditeur Python
+      editor.onDidFocusEditorText(() => {
+        console.log('[Python Editor] Editor focused');
+        sendToFlutter({
+          type: 'PYTHON_FOCUS'
+        });
+      });
+
+      // Variable pour stocker le dernier code reçu de Blockly
+      let lastBlocklyCode = '';
+
+      // Écouter les changements de contenu
+      editor.onDidChangeModelContent((e) => {
+        if (isUpdatingFromExternal) {
+          console.log('[Python Editor] Change ignored (external update)');
+          return;
+        }
+
+        // Debounce pour ne pas envoyer trop de mises à jour
+        if (changeTimeout) clearTimeout(changeTimeout);
+        
+        changeTimeout = setTimeout(() => {
+          const code = editor.getValue();
+          
+          // Ne pas envoyer si le code n'a pas changé depuis la dernière update de Blockly
+          if (code === lastBlocklyCode) {
+            console.log('[Python Editor] Code unchanged from Blockly, ignoring');
+            return;
+          }
+          
+          console.log('[Python Editor] Code changed by user, sending to Flutter...');
+          
+          // Mettre à jour le statut
+          const statusEl = document.getElementById('sync-status');
+          statusEl.textContent = '⏳ Sync...';
+          statusEl.classList.remove('neutral');
+          
+          // Envoyer à Flutter
+          sendToFlutter({
+            type: 'PYTHON_EDITED',
+            code: code
+          });
+          
+          // Retour au statut normal après un délai
+          setTimeout(() => {
+            statusEl.textContent = '✓ Synchronisé';
+          }, 500);
+        }, 800); // Attendre 800ms après la dernière frappe
+      });
+
+      // Fonction globale pour mettre à jour le code depuis l'extérieur (Blockly)
+      window.updatePythonCode = function(code) {
+        console.log('[Python Editor] 📥 Received update from Blockly');
+        console.log('[Python Editor] New code length:', code.length);
+        console.log('[Python Editor] Code preview:', code.substring(0, 100));
+        
+        // Sauvegarder ce code pour comparaison future
+        lastBlocklyCode = code;
+        
+        // Ne mettre à jour que si le contenu est vraiment différent
+        const currentCode = editor.getValue();
+        if (currentCode === code) {
+          console.log('[Python Editor] Code identical, skipping update');
+          return;
+        }
+        
+        isUpdatingFromExternal = true;
+        
+        // Sauvegarder la position du curseur
+        const position = editor.getPosition();
+        const scrollPosition = editor.getScrollTop();
+        
+        console.log('[Python Editor] Current position:', position);
+        console.log('[Python Editor] Updating editor value...');
+        
+        // Mettre à jour le contenu
+        editor.setValue(code);
+        
+        console.log('[Python Editor] ✅ Editor value updated');
+        
+        // Restaurer la position si possible
+        try {
+          editor.setPosition(position);
+          editor.setScrollTop(scrollPosition);
+          console.log('[Python Editor] Position restored');
+        } catch(e) {
+          console.warn('[Python Editor] Could not restore position:', e);
+        }
+        
+        // Réactiver l'écoute des changements après un délai plus long
+        setTimeout(() => {
+          isUpdatingFromExternal = false;
+          console.log('[Python Editor] ✅ Update complete, listening for changes again');
+        }, 500); // Augmenté à 500ms pour être sûr que setValue a fini
+      };
+
+      // Fonction pour envoyer des messages à Flutter
+      function sendToFlutter(message) {
+        const jsonMsg = JSON.stringify(message);
+        console.log('[Python Editor] Sending to Flutter:', jsonMsg);
+        
+        try {
+          if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+            // Mode Native/Desktop
+            window.flutter_inappwebview.callHandler('PythonBridge', jsonMsg);
+            console.log('[Python Editor] ✅ Message sent via flutter_inappwebview');
+          } else if (window.PythonBridge && window.PythonBridge.postMessage) {
+            // Fallback Native
+            window.PythonBridge.postMessage(jsonMsg);
+            console.log('[Python Editor] ✅ Message sent via PythonBridge');
+          } else if (window.parent !== window) {
+            // Mode Web : postMessage vers le parent
+            console.log('[Python Editor] ✅ Web mode detected, using postMessage to parent...');
+            console.log('[Python Editor] 📍 Current origin:', window.location.origin);
+            console.log('[Python Editor] 📍 Parent origin (injected):', window.__PARENT_ORIGIN__);
+            
+            // Utiliser l'origine injectée (car dans un Data URL, window.location.origin est 'null')
+            const targetOrigin = window.__PARENT_ORIGIN__ || window.location.origin || '*';
+            
+            window.parent.postMessage({
+              handler: 'PythonBridge',
+              data: jsonMsg
+            }, targetOrigin);
+            console.log('[Python Editor] ✅ PostMessage sent to parent with origin:', targetOrigin);
+          } else {
+            console.error('[Python Editor] ❌ No bridge available');
+          }
+        } catch(e) {
+          console.error('[Python Editor] ❌ Error sending message:', e);
+        }
+      }
+      
+      // Écouter les messages postMessage (pour mode Web)
+      window.addEventListener('message', function(event) {
+        console.log('[Python Editor Web] 📨 Message received from:', event.origin);
+        console.log('[Python Editor Web] 📦 Message data:', event.data);
+        console.log('[Python Editor Web] 📍 Expected origin:', window.__PARENT_ORIGIN__);
+        
+        // Vérifier que le message vient de l'origine attendue (sécurité)
+        const expectedOrigin = window.__PARENT_ORIGIN__ || window.location.origin;
+        
+        // Autoriser "null" (fichiers locaux) et l'origine attendue
+        const isValidOrigin = event.origin === expectedOrigin || 
+                             event.origin === "null" || 
+                             expectedOrigin === "null" ||
+                             !expectedOrigin; // Si pas d'origine attendue, on accepte (mode dev/localdart)
+
+        if (!isValidOrigin) {
+          console.warn('[Python Editor Web] ⚠️ Message rejected - wrong origin:', event.origin, '!==', expectedOrigin);
+          return;
+        }
+        
+        if (event.data && event.data.type === 'evaluate' && event.data.code) {
+          try {
+            console.log('[Python Editor Web] 🔄 Evaluating code:', event.data.code.substring(0, 100));
+            const result = eval(event.data.code);
+            console.log('[Python Editor Web] ✅ Code evaluated successfully, result:', result);
+            
+            // Renvoyer le résultat au parent avec l'ID de la requête
+            const targetOrigin = window.__PARENT_ORIGIN__ || window.location.origin || '*';
+            window.parent.postMessage({
+              type: 'evaluate_result',
+              requestId: event.data.requestId,
+              result: result,
+              success: true
+            }, targetOrigin);
+            console.log('[Python Editor Web] 📤 Result sent back to parent');
+          } catch (e) {
+            console.error('[Python Editor Web] ❌ Error evaluating code:', e);
+            
+            // Envoyer l'erreur au parent
+            const targetOrigin = window.__PARENT_ORIGIN__ || window.location.origin || '*';
+            window.parent.postMessage({
+              type: 'evaluate_result',
+              requestId: event.data.requestId,
+              error: e.toString(),
+              success: false
+            }, targetOrigin);
+          }
+        }
+      });
+
+      // Signaler que l'éditeur est prêt
+      sendToFlutter({ type: 'EDITOR_READY' });
+      
+      console.log('[Python Editor] ✅ Ready');
+    });
+    
+    } // Fin de initMonaco()
+
+    // Démarrer l'initialisation
+    initMonaco();
+
+    // Gestion du redimensionnement
+    window.addEventListener('resize', () => {
+      if (editor) {
+        editor.layout();
+      }
+    });
+  </script>
+</body>
+</html>
