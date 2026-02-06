@@ -44,6 +44,5 @@ python3 -m http.server 8080
 Ouvrez ensuite `http://localhost:8080` dans votre navigateur.
 
 
-
 ---
 <p align="center">Made with ❤️ by Intuition & Robotics Team</p>
